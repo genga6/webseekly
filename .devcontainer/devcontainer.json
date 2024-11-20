@@ -1,8 +1,8 @@
 {
-	"name": "wanderin",
+	"name": "webseekly",
 	"dockerComposeFile": "docker-compose.yaml",
-	"service": "wanderin",
-	"workspaceFolder": "/workspaces/wanderin",
+	"service": "webseekly",
+	"workspaceFolder": "/workspaces/webseekly",
 	"overrideCommand": true,
 	"customizations": {
 		"vscode": {
