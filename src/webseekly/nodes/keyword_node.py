@@ -1,25 +1,26 @@
-from typing import TypedDict
+from webseekly.core.node import Node
 
-class State(TypedDict):
-    topic: str
-    keywords: list[str]
+class KeywordNode(Node):
+    def __init__(
+        self, 
+        input_key: list[str], 
+        output_key: list[str], 
+    ):
+        super().__init__(input_key, output_key)
 
-class KeywordNode:
-    def __init__(self):
-        pass
+    def execute(self, state) -> dict:
+        topics = state.get(self.input_key[0])
 
-    def __call__(self, state: State) -> dict:
-        topic = state.get("topic")
-        if topic:
-            keywords = [f"{topic}の技術", f"最新の{topic}", f"{topic}のトレンド"]   # TODO: APIによる機能強化
-            state["keywords"] = keywords
-        else:
-            state["keywords"] = []
+        if not topics:
+            raise ValueError(f"State does not contain the required input key: {self.input_key[0]}")     # TODO: topicを指定しない場合の挙動
+        
+        keywords = []
+        for topic in topics:
+            keywords.append([
+                f"{topic}の技術",
+                f"最新の{topic}",
+                f"{topic}のトレンド"
+            ])
 
+        state[self.output_key[0]] = keywords
         return state
-    
-if __name__ == "__main__":
-    keyword_node = KeywordNode()
-    initial_state = {"topic": "AI"}
-    updated_state = keyword_node(initial_state)
-    print("Updated State:", updated_state)
