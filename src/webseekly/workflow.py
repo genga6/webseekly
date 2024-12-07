@@ -1,5 +1,5 @@
 from typing import TypedDict
-from langgraph.graph import StateGraph
+from webseekly.graph import StateGraph
 from nodes.keyword_node import KeywordNode
 from nodes.search_node import SearchNode
 from nodes.crawl_node import CrawlNode
