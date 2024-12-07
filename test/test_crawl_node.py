@@ -1,4 +1,4 @@
-from langgraph.nodes.crawl_node import CrawlNode
+from webseekly.nodes.crawl_node import CrawlNode
 
 def test_crawl_node():
     crawl_node = CrawlNode()

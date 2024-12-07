@@ -1,4 +1,4 @@
-from langgraph.nodes.keyword_node import KeywordNode
+from webseekly.nodes.keyword_node import KeywordNode
 
 def test_keyword_node():
     keyword_node = KeywordNode()

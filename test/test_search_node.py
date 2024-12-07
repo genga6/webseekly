@@ -1,4 +1,4 @@
-from langgraph.nodes.search_node import SearchNode
+from webseekly.nodes.search_node import SearchNode
 
 def test_search_node():
     search_node = SearchNode()
