@@ -40,3 +40,6 @@ jobs:
 
       - name: Run pytest
         run: uv run pytest -s test/test_crawl_node.py
+
+      - name: Ensure pip cache folder exists
+        run: mkdir -p /home/runner/.cache/pip
