@@ -21,3 +21,6 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | bash || exit 1
 ENV PATH="/root/.uv/bin:$PATH"
 
 RUN bash -lc 'uv python install 3.10'
+
+# 環境変数 PYTHONPATH を設定
+ENV PYTHONPATH=/app/src

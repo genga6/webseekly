@@ -31,5 +31,9 @@ dev-dependencies = [
 ignore = ["E731", "F841", "F821", "E741"]  # Custom linting rules to ignore certain checks
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 include = ["webseekly"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+pythonpath = ["src"]
