@@ -6,9 +6,9 @@ from typing import TypedDict
 
 
 class State(TypedDict):
-    keywords: list[str]
-    search_results: list[str]
-    crawled_data: list[str]
+    keywords: list[list]
+    search_results: list[list]
+    crawled_data: list[list]
 
 
 def test_crawl_node():
@@ -28,7 +28,7 @@ def test_crawl_node():
 
     # Define initial state
     state = {
-        "search_results": ["https://example.com/page1", "https://example.com/page2"],
+        "search_results": [["https://example.com/page1", "https://example.com/page2"]],
         "crawled_data": [],
     }
 
