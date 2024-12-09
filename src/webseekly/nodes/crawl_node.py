@@ -1,5 +1,5 @@
 import requests
-from webseekly.core.node import Node
+from src.webseekly.core.node import Node
 
 
 class CrawlNode(Node):
