@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, Mock
-from webseekly.nodes.crawl_node import CrawlNode
+from src.webseekly.nodes.crawl_node import CrawlNode
 from langgraph.graph import StateGraph
 from typing import TypedDict
 

@@ -1,4 +1,4 @@
-from webseekly.nodes.keyword_node import KeywordNode
+from src.webseekly.nodes.keyword_node import KeywordNode
 from langgraph.graph import StateGraph
 from typing import TypedDict
 
