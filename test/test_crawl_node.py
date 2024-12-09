@@ -6,29 +6,31 @@ from typing import TypedDict
 
 
 class State(TypedDict):
-    keywords: list[str]
     search_results: list[str]
     crawled_data: list[str]
 
 
 def test_crawl_node():
-
+    """
+    Test the CrawlNode functionality with a single topic.
+    """
     # Define input and output keys
     input_key = ["search_results"]
     output_key = ["crawled_data"]
 
+    # Initialize CrawlNode
     crawl_node = CrawlNode(input_key, output_key)
 
-     # Build the state graph
+    # Build the state graph
     graph_builder = StateGraph(State)
     graph_builder.add_node("crawlnode", crawl_node)
     graph_builder.set_entry_point("crawlnode")
     graph_builder.set_finish_point("crawlnode")
     graph = graph_builder.compile()
 
-    # Define initial state
+    # Define initial state for a single topic
     state = {
-        "search_results": ["https://example.com/page1", "https://example.com/page2"],
+        "search_results": ["https://example.com/page1", "https://example.com/page2"],  # Single topic URLs
         "crawled_data": [],
     }
 
