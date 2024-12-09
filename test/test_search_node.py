@@ -1,4 +1,4 @@
-from webseekly.nodes.search_node import SearchNode
+from src.webseekly.nodes.search_node import SearchNode
 from langgraph.graph import StateGraph
 from typing import TypedDict
 
