@@ -29,10 +29,6 @@ def test_save_node(cleanup_saved_files):
     output_key = ["save_status"]
     save_path = "./test/output_data"
 
-    # Ensure the directory exists
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-
     # Create SaveNode
     save_node = SaveNode(input_key, output_key, save_path=save_path)
 
