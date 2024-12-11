@@ -1,5 +1,5 @@
 from src.webseekly.core.node import Node
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 
 
 class ScrapeNode(Node):
@@ -10,7 +10,7 @@ class ScrapeNode(Node):
     ):
         super().__init__(input_key, output_key)
 
-    def execute(self, state) -> dict:
+    async def execute(self, state) -> dict:
         """
         Executes the scrape operation for a single topic.
         Extracts links and titles from crawled HTML data or URLs.
@@ -21,23 +21,24 @@ class ScrapeNode(Node):
 
         scraped_data = []
 
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
+        # Use async_playwright for asynchronous brawser handling
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()
 
             for url_or_html in crawled_data:
                 try:
                     if url_or_html.startswith("http"):
                         # URL is provided
-                        page.goto(url_or_html)
-                        page_content = page.content()
-                        title = page.title()
+                        await page.goto(url_or_html)
+                        page_content = await page.content()
+                        title = await page.title()
                     else:
                         # HTML content is provided
                         page_content = url_or_html
                         title = "No title"
 
-                    links = [a.get_attribute('href') for a in page.query_selector_all('a')]
+                    links = [await a.get_attribute('href') for a in await page.query_selector_all('a')]
 
                     scraped_data.append({
                         "title": title, 
@@ -47,7 +48,7 @@ class ScrapeNode(Node):
                     print(f"Error processing {url_or_html}: {e}")
                     continue
 
-            browser.close()
+            await browser.close()
 
         # Update state with the scraped data
         state[self.output_key[0]] = scraped_data
