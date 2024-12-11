@@ -11,24 +11,7 @@ class CrawlNode(Node):
     ):
         super().__init__(input_key, output_key)
 
-    async def _fetch_url(self, url: str) -> str:
-        """
-        Fetches the HTML content of a URL using Playwright.
-        """
-        try:
-            async with async_playwright() as p:
-                browser = await p.chromium.launch(headless=True)
-                page = await browser.new_page()
-                await page.goto(url, timeout=10000)
-                content = await page.content()
-                await browser.close()
-                return content
-        except Exception as e:
-            print(f"Failed to crawl {url}: {e}")
-            return ""
-        
     async def _execute_async(self, state: dict) -> dict:
-
         try:
             # Retrieve input data
             search_results = state.get(self.input_key[0])
@@ -56,6 +39,22 @@ class CrawlNode(Node):
         print("Finished _execute_async")
         return state
 
+    async def _fetch_url(self, url: str) -> str:
+        """
+        Fetches the HTML content of a URL using Playwright.
+        """
+        try:
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=True)
+                page = await browser.new_page()
+                await page.goto(url, timeout=10000)
+                content = await page.content()
+                await browser.close()
+                return content
+        except Exception as e:
+            print(f"Failed to crawl {url}: {e}")
+            return ""
+        
     def execute(self, state: dict) -> dict:
         """
         Wrapper to execute the asynchronous logic in a synchronous manner.
