@@ -1,3 +1,5 @@
+import os
+import json
 import pytest
 from unittest.mock import patch, MagicMock
 from src.webseekly.nodes.scrape_node import ScrapeNode
@@ -6,76 +8,69 @@ from typing import TypedDict
 
 
 class State(TypedDict):
-    crawled_data: list[str]  # 単一トピックのURLリスト
-    scraped_data: list[dict]  # 単一トピックのスクレイピング結果
+    crawled_data: dict  # Example: {"content": "<html><title>Test</title><body>Sample Content</body></html>"}
+    search_intent: str  # Example: "Extract the title and body content from the web page"
+    required_fields: list[str]  # Example: ["title", "body"]
+    scraped_data: dict  # Example: {"title": "Test", "body": "Sample Content"} 
 
 
-@pytest.fixture
-def mock_playwright_browser():
-    """
-    モックされたPlaywrightブラウザを提供するためのfixture
-    """
-    with patch("src.webseekly.nodes.scrape_node.sync_playwright") as mock_playwright:
-        mock_browser = MagicMock()
-        mock_page = MagicMock()
-        mock_context = MagicMock()
-
-        mock_page.content.return_value = "<html><head><title>Mocked Page</title></head><body><a href='https://mocklink1.com'>Link1</a><a href='https://mocklink2.com'>Link2</a></body></html>"
-        mock_page.title.return_value = "Mocked Page"
-
-        mock_playwright.return_value.__enter__.return_value = MagicMock(
-            chromium=MagicMock(
-                launch=MagicMock(return_value=mock_browser)
-            )
-        )
-        mock_browser.new_context.return_value = mock_context
-        mock_browser.new_page.return_value = mock_page
-        mock_context.new_page.return_value = mock_page
-
-        # モックの設定
-        mock_page.content.return_value = "<html><head><title>Mocked Page</title></head><body><a href='https://mocklink1.com'>Link1</a><a href='https://mocklink2.com'>Link2</a></body></html>"
-        mock_page.title.return_value = "Mocked Page"
-        
-        mock_page.query_selector_all.return_value = [
-            MagicMock(get_attribute=MagicMock(return_value="https://mocklink1.com")),
-            MagicMock(get_attribute=MagicMock(return_value="https://mocklink2.com")),
-        ]
-
-        yield mock_playwright
-
-
-def test_scrape_node(mock_playwright_browser):
-    """
-    Test the ScrapeNode functionality with a single topic.
-    """
-    input_key = ["crawled_data"]
+def test_scrape_node():
+    input_key = ["crawled_data", "search_intent", "required_fields"]
     output_key = ["scraped_data"]
 
-    scrape_node = ScrapeNode(input_key, output_key)
+    openai_api_key = os.getenv("OPEN_API_KEY")
 
-    # 単一トピックのURLを初期データとして設定
+    scrape_node = ScrapeNode(input_key, output_key, openai_api_key=openai_api_key)
+
+    # モックデータを作成
+    crawled_data = {
+        "content": "<html><title>Test Title</title><meta name='description' content='This is a meta description.'><body>Sample Content</body></html>"
+    }
+    search_intent = "Extract the title and body content from the web page"
+    required_fields = ["title", "body"]
+
     state = {
-        "crawled_data": ["https://example.com/page1", "https://example.com/page2"],
-        "scraped_data": []
+        "crawled_data": crawled_data,
+        "search_intent": search_intent,
+        "required_fields": required_fields,
+        "scraped_data": {}
     }
 
-    graph_builder = StateGraph(State)
-    graph_builder.add_node("scrapenode", scrape_node)
-    graph_builder.set_entry_point("scrapenode")
-    graph_builder.set_finish_point("scrapenode")
-    graph = graph_builder.compile()
+    # LLMの応答をモック
+    mock_llm_response = {
+        "choices": [
+            {
+                "message": {
+                    "content": json.dumps({"title": "Test Title", "body": "Sample Content"})
+                }
+            }
+        ]
+    }
 
-    # 実行
-    result_state = graph.invoke(state, debug=True)
-    print(f"Result state: {result_state}")
+    # BeautifulSoup + LLMの動作をパッチ
+    with patch("openai.ChatCompletion.create", return_value=mock_llm_response) as mock_openai:
+        # StateGraphを作成
+        graph_builder = StateGraph(State)
+        graph_builder.add_node("scrapenode", scrape_node)
+        graph_builder.set_entry_point("scrapenode")
+        graph_builder.set_finish_point("scrapenode")
+        graph = graph_builder.compile()
 
-    # 期待される結果を設定
-    expected_scraped_data = [
-        {"title": "Mocked Page", "links": ["https://mocklink1.com", "https://mocklink2.com"]},
-        {"title": "Mocked Page", "links": ["https://mocklink1.com", "https://mocklink2.com"]}
-    ]
+        # 実行
+        result_state = graph.invoke(state, debug=True)
 
-    # アサーション
-    assert "scraped_data" in result_state, "State should contain 'scraped_data' key"
-    assert len(result_state["scraped_data"]) == len(expected_scraped_data), "Number of pages should match"
-    assert result_state["scraped_data"] == expected_scraped_data, "Scraped data does not match expected content"
+        # 期待される結果
+        expected_scraped_data = {
+            "title": "Test Title",
+            "body": "Sample Content",
+            "other_fields": None,
+            "error_message": None
+        }
+
+        # アサーション
+        assert result_state["scraped_data"]["title"] == expected_scraped_data["title"], "タイトルが一致しません"
+        assert result_state["scraped_data"]["body"] == expected_scraped_data["body"], "本文が一致しません"
+        assert result_state["scraped_data"]["error_message"] is None, "予期しないエラーメッセージが含まれています"
+
+    # モックが正しく呼び出されたことを確認
+    mock_openai.assert_called_once()
