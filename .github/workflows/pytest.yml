@@ -99,6 +99,9 @@ jobs:
         run: echo "PYTHONPATH=${{ env.PYTHONPATH }}"
 
       - name: Run pytest for SearchNode
+        env: 
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          CUSTOM_SEARCH_ENGINE_ID: ${{ secrets.CUSTOM_SEARCH_ENGINE_ID }}
         run: uv run pytest -s test/test_search_node.py
 
       - name: Ensure pip cache folder exists
