@@ -4,19 +4,18 @@ from src.webseekly.nodes.search_node import SearchNode
 from langgraph.graph import StateGraph
 from typing import TypedDict
 
-
 class State(TypedDict):
     queries: list[str]
-    search_results: list[dict]
+    url_data: dict
 
 @pytest.mark.asyncio
 async def test_search_node():
     """
-    Test the SearchNode functionality with multiple queries.
+    Test the SearchNode functionality with mocked Google Custom Search API.
     """
     # Define input and output keys
     input_key = ["queries"]
-    output_key = ["search_results"]
+    output_key = ["url_data"]
 
     # Initialize SearchNode
     search_node = SearchNode(input_key, output_key)
@@ -30,44 +29,40 @@ async def test_search_node():
 
     # Define initial state
     state = {
-        "queries": ["AIの技術", "最新のAI", "AIのトレンド"],
-        "search_results": [],
+        "queries": ["AIの技術", "最新のAI"],
+        "url_data": {}
     }
 
-    # Mock SearchNode's _search_google method
-    mock_results = [
-        {"query": "AIの技術", "title": "Result 1", "link": "https://example.com/1", "snippet": "Snippet 1"},
-        {"query": "最新のAI", "title": "Result 2", "link": "https://example.com/2", "snippet": "Snippet 2"},
-        {"query": "AIのトレンド", "title": "Result 3", "link": "https://example.com/3", "snippet": "Snippet 3"},
-    ]
+    # Mock _search_google
+    with patch.object(SearchNode, "_search_google", new=AsyncMock()) as mock_search_google:
+        # Simulate API responses
+        mock_search_google.side_effect = [
+            [
+                {"query": "AIの技術", "title": "Result 1", "link": "https://example.com/1", "snippet": "Snippet 1"},
+                {"query": "AIの技術", "title": "Result 2", "link": "https://example.com/2", "snippet": "Snippet 2"}
+            ],
+            [
+                {"query": "最新のAI", "title": "Result 3", "link": "https://example.com/3", "snippet": "Snippet 3"}
+            ]
+        ]
 
-    async def mock_search(client, query, num_results):
-        for result in mock_results:
-            if result["query"] == query:
-                return [result]  # 返り値をリストでラップ
-        return []
-
-    with patch.object(SearchNode, "_search_google", new=AsyncMock(side_effect=mock_search)) as mock_search_google:
-        # Log before execution
-        print(f"Initial state: {state}")
-
-        # Execute the graph
+        # Execute the node
         result_state = await graph.ainvoke(state, debug=True)
 
-        # Log after execution
-        print(f"Result state: {result_state}")
+        # Check if mock_search_google was called
+        assert mock_search_google.call_count == 2, "_search_google should be called for each query"
 
-    # Expected search results
-    expected_results = [
-        {"query": "AIの技術", "title": "Result 1", "link": "https://example.com/1", "snippet": "Snippet 1"},
-        {"query": "最新のAI", "title": "Result 2", "link": "https://example.com/2", "snippet": "Snippet 2"},
-        {"query": "AIのトレンド", "title": "Result 3", "link": "https://example.com/3", "snippet": "Snippet 3"},
-    ]
+        # Assertions for url_data
+        assert "url_data" in result_state, "State should contain 'url_data' key"
 
-    # Assertions
-    assert result_state["search_results"] == expected_results, "Search results do not match expected output"
-    assert "queries" in result_state, "State should retain the 'queries' key"
-    assert "search_results" in result_state, "State should contain the 'search_results' key"
+        assert "https://example.com/1" in result_state["url_data"], "URL data should include https://example.com/1"
+        assert result_state["url_data"]["https://example.com/1"]["search_results"]["title"] == "Result 1", \
+            "Search results for https://example.com/1 do not match expected content"
 
-    # Ensure the mock was called with each query
-    assert mock_search_google.call_count == 3, "Expected _search_google to be called for each query"
+        assert "https://example.com/2" in result_state["url_data"], "URL data should include https://example.com/2"
+        assert result_state["url_data"]["https://example.com/2"]["search_results"]["title"] == "Result 2", \
+            "Search results for https://example.com/2 do not match expected content"
+
+        assert "https://example.com/3" in result_state["url_data"], "URL data should include https://example.com/3"
+        assert result_state["url_data"]["https://example.com/3"]["search_results"]["title"] == "Result 3", \
+            "Search results for https://example.com/3 do not match expected content"
