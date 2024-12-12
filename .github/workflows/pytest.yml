@@ -134,6 +134,8 @@ jobs:
         run: echo "PYTHONPATH=${{ env.PYTHONPATH }}"
 
       - name: Run pytest for ScrapeNode
+        env: 
+          OPEN_API_KEY: ${{ secrets.OPEN_API_KEY }}
         run: uv run pytest -s test/test_scrape_node.py
 
       - name: Ensure pip cache folder exists
