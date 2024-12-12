@@ -1,3 +1,4 @@
+import os
 import pytest
 from unittest.mock import patch, AsyncMock
 from src.webseekly.nodes.search_node import SearchNode
@@ -17,8 +18,11 @@ async def test_search_node():
     input_key = ["queries"]
     output_key = ["url_data"]
 
+    google_api_key = os.getenv("GOOGLE_API_KEY")
+    search_engine_id = os.getenv("CUSTOM_SEARCH_ENGINE_ID")
+
     # Initialize SearchNode
-    search_node = SearchNode(input_key, output_key)
+    search_node = SearchNode(input_key, output_key, google_api_key=google_api_key, search_engine_id=search_engine_id)
 
     # Build the state graph
     graph_builder = StateGraph(State)

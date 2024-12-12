@@ -1,4 +1,3 @@
-import os
 import httpx
 import asyncio
 from src.webseekly.core.node import Node
@@ -8,12 +7,14 @@ class SearchNode(Node):
         self,
         input_key: list[str],  # ["queries"]
         output_key: list[str],  # ["url_data"]
+        google_api_key: str, 
+        search_engine_id: str
     ):
         super().__init__(input_key, output_key)
-        self.api_key = os.getenv("GOOGLE_API_KEY")
-        self.search_engine_id = os.getenv("CUSTOM_SEARCH_ENGINE_ID")
+        self.google_api_key = google_api_key
+        self.search_engine_id = search_engine_id
 
-        if not self.api_key or not self.search_engine_id:
+        if not self.google_api_key or not self.search_engine_id:
             raise EnvironmentError("API_KEY or SEARCH_ENGINE_ID is not set in the environment.")
 
     async def _execute_async(self, state) -> dict:
@@ -85,7 +86,7 @@ class SearchNode(Node):
         """
         url = "https://www.googleapis.com/customsearch/v1"
         params = {
-            "key": self.api_key,
+            "key": self.google_api_key,
             "cx": self.search_engine_id,
             "q": query,
             "num": num_results,
